@@ -37,7 +37,7 @@ const groupSchema = new mongoose.Schema({
   }
 });
 function arrayLimit(val) {
-  return val.length <= 5;
+  return val.length <= 25;
 }
 
 module.exports = mongoose.model("Group", groupSchema);
