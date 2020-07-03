@@ -102,7 +102,7 @@ exports.getUsersbyids = (req, res) => {
     var array1 = req.body.groupusers;
     var array2 = [] 
     array1.forEach(function(stringId){
-    array2.push(new ObjectID(stringId))
+    array2.push((stringId))
     })
     console.log(array)
     let group = await Group.find({ groupname: req.body.groupname }).select("_id").then((data) => data);
@@ -129,15 +129,15 @@ exports.getUsersbyids = (req, res) => {
     var array1 = req.body.groupusers;
     var array2 = [] 
     array1.forEach(function(stringId){
-    array2.push(new ObjectID(stringId))
-    console.log((new ObjectID(stringId)))
+    array2.push((stringId))
+    console.log(((stringId)))
     })
     console.log(array2)
     let user = await User.find({
         _id: {
             $in: array2
         }
-      }).select("firstname email phonenumber").then((data) => data);
+      }).select("_id").then((data) => data);
      console.log("user", user);
 
      let group = await Group.find({ groupname: req.body.groupname }).select("_id").then((data) => data);
