@@ -7,6 +7,7 @@ const groupSchema = new mongoose.Schema({
   groupname: {
     type: String,
     required: true,
+     unique: true
   },
   groupdescription: {
             type: String,
@@ -25,7 +26,7 @@ const groupSchema = new mongoose.Schema({
   groupusers: {
   type:[
     {
-      type: ObjectId,ref:"users",unique:true,
+      type: ObjectId,ref:"users"
       // groupCreatedBy: { type: ObjectId, ref: "users" },
     }],
     validate: [arrayLimit, '{PATH} exceeds the limit of 25']
