@@ -1,5 +1,7 @@
 const mongoose = require("mongoose");
 const Schema = mongoose.Schema;
+const Cryptr = require('cryptr');
+const cryptr = new Cryptr('3');
 
 
 const user = new Schema({
@@ -65,20 +67,20 @@ const user = new Schema({
     // select: false,
   },
 });
-
 function generatePassword() {
   var length = 8,
     charset = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789",
-    genPassword = "";
+    genPassword = ""; 
   for (var i = 0, n = charset.length; i < length; ++i) {
     genPassword += charset.charAt(Math.floor(Math.random() * n));
   }
   return genPassword;
 }
-
 user.pre("save", function (next) {
-  // this.password = Math.random().toString(36).slice(2);
-  this.password = generatePassword();
+this.password = cryptr.encrypt(generatePassword());
+console.log(this.password)
+// let decryptedString = cryptr.decrypt(this.password);
+// console.log(decryptedString);
   next();
 });
 
