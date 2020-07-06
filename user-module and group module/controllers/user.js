@@ -1,5 +1,7 @@
 const db=require('mongoose')
 const User = require("../models/UserSchema");
+const Cryptr = require('cryptr');
+const cryptr = new Cryptr('3');
 
 // const transporter=nodemailer.createTransport(sendgridTransport({
 //   auth:{
@@ -67,6 +69,9 @@ exports.userById = (req, res, next, id) => {
     next();
   });
 };
+
+
+
 exports.createUser = async (req, res, next) => {
   const {
     firstname,
@@ -95,8 +100,11 @@ exports.createUser = async (req, res, next) => {
   User.create(newUser)
  
     .then((User) => {
+      let password=User.password;
+      let decryptedString = cryptr.decrypt(password);
+      console.log(decryptedString)
       res.status(201).json({
-        message: `user created sucessfully and password is ${User.password}`,
+        message: `user created sucessfully and password is ${decryptedString}`,
       })
     //  return transporter.sendMail({
     //     to:'User.email',
@@ -122,16 +130,20 @@ exports.updateMe = (req, res) => {
       "firstname lastname mobile email address state pincode country dob active createdAt"
     )
     .then((user) => {
-      if(user.active==true){
+      if(user.active){
         res.status(200).json({
           result: user,
         })}
         else {
-      res.status(401).json({
+      res.status(404).json({
         msg:"user account removed"
       })
     }
-    });
+    }).catch((err)=>{
+      res.status(401).json({
+        err
+      })
+    })
   }
 };
 exports.deleteUser = (req, res, next) => {
@@ -143,7 +155,7 @@ exports.deleteUser = (req, res, next) => {
     if (!user) {
       next(err);
     }
-    res.status(400).json({ message: "user account deleted check it once" });
+    res.status(200).json({ message: "user account deleted check it once" });
   });
 };
 
@@ -157,9 +169,9 @@ exports.login = (req, res) => {
     "firstname lastname mobile email address state pincode country dob active createdAt"
   )
     .then((user) => {
-      if (user.active === false) {
+      if (user.active) {
         res.status(200).json({
-          message: "please create new account",
+          message: "you account is closed please create new account",
         });
       } else {
         
@@ -174,15 +186,24 @@ exports.login = (req, res) => {
     .catch((err) => {
       res.status(401).send({
         msg: "please enter valied username and password.",
+        err,
       });
     });
 };
 
 exports.forgot = (req, res) => {
   let email = req.body.email;
-  User.findOne({ email: email }).then((user) => {
+  User.findOne({ email: email })
+  .then((user) => {
+    let password=user.password;
+    const decryptedString = cryptr.decrypt(password);
     res.status(200).send({
-      msg: `your password is ${user.password}`,
+      msg: `your password is ${decryptedString}`,
     });
-  });
+  }).catch((err)=>{
+    res.status(404).json({
+      msg:'user not found',
+      err
+    })
+  })
 };
