@@ -1,10 +1,14 @@
 const Group = require("../models/groupSchema");
 const User=require("../models/UserSchema")
-const ObjectId = require('mongodb').ObjectID;
+//var intersection = require('array-intersection');
+const mongoose = require("mongoose");
+//var _ = require('underscore');
+
+
 
 exports.createGroup = (req, res, next) => {
     let grouptype=req.body.grouptype;
-    if(grouptype=="public"||grouptype=="private"){
+    if(grouptype==("public"||"private")){
   let group = new Group(req.body);
   group.groupCreatedBy = req.profile;
   group.save((err, result) => {
@@ -13,8 +17,8 @@ exports.createGroup = (req, res, next) => {
         error: err,
       });
     }
-    res.status(200).json({
-      message: "group created by user",
+    res.status(201).json({
+      message: "Sucessfully created the group",
       result,
     });
   });
@@ -33,10 +37,10 @@ exports.groupsByAdmin = (req, res) => {
           error: err,
         });
       }
-      res.json(groups);
+      res.status(200).json(groups);
     });
 };
-exports.groupsdeleteByUser = (req, res) => {
+exports.removegroupsByUser = (req, res) => {
     Group.findOneAndDelete({ groupCreatedBy: req.profile._id })
       .exec((err, groups) => {
         if (err) {
@@ -44,7 +48,7 @@ exports.groupsdeleteByUser = (req, res) => {
             error: err,
           });
         }
-        res.json({
+        res.status(200).json({
             msg:"group deleted sucessfully"
         });
       });
@@ -54,45 +58,49 @@ exports.getGroups = (req, res) => {
   let groups = Group.find()
     .populate("groupCreatedBy", "_id firstname email")
     .then((groups) => {
-      res.json(groups);
-    });
+      res.status(200).json(groups);
+    }).catch((err)=>{
+     res.status(401).json({err})
+    })
 };
 
-exports.getUsersbyids = (req, res) => {
+  exports.updateGroup = async (req, res) => { 
     var array1 = req.body.groupusers;
-  var array2 = [] 
-  array1.forEach(function(stringId){
-  array2.push(new ObjectID(stringId))
-  console.log((new ObjectID(stringId)))
-  })
-  User.find({
-    _id: {
-        $in: array2
-    }
-  })
-  .select(
-    "firstname lastname mobile email address state pincode country dob active createdAt"
-  )
-  .then((user) => {
-    let users = user;
-    console.log("users",users)
-  });
-  }
-
-
-  exports.updateGroup = async (req, res) => {
-    let group = await Group.find({ groupname: req.body.groupname }).select("_id").then((data) => data);
+    var array2 = [] 
+    array1.forEach(function(stringId){
+    array2.push((stringId))
+    })
+    let user = await User.find({
+        _id: {
+            $in: array2
+        }
+      }).select("_id").then((data) => data).catch((err)=>err);
+     console.log("user", user);
+     let groupsusers = await Group.find({ groupname: req.body.previousgroupname }).distinct('groupusers').then((data) => data);
+    let group = await Group.find({ groupname: req.body.previousgroupname }).select("_id").then((data) => data);
+    var groupusersarr = JSON.stringify(groupsusers)
+    var commonValues = array1.filter(function(value) { 
+      return groupusersarr.indexOf(value) > -1;
+      });
+  console.log(commonValues)
+    
+   // var z =_.intersection(objectIdArray, groupsusers);
+    //var z =_.intersection([myJSON], [myJSON1]);
+    //console.log(z)
     let usergroup = await Group.findByIdAndUpdate(
-     group,req.body,
+     group, { "$set": { "groupname": req.body.groupname, "groupdescription": req.body.groupdescription, },$addToSet: { groupusers: user }},
       { new: true },
     )
     .exec((err, result) => {
       if (err) {
-        return res.status(400).json({
+        return res.status(304).json({
           error: err,
         });
       } else {
-        res.json(result);
+        res.status(200).json({
+          msg:`these users are  arelady exisists in group ${commonValues} `,
+          result,
+        });
       }
     })
   };
@@ -104,7 +112,7 @@ exports.getUsersbyids = (req, res) => {
     array1.forEach(function(stringId){
     array2.push((stringId))
     })
-    console.log(array)
+    //console.log(array)
     let group = await Group.find({ groupname: req.body.groupname }).select("_id").then((data) => data);
    // console.log(group);
     let usergroup= await Group.findByIdAndUpdate(
@@ -119,43 +127,43 @@ exports.getUsersbyids = (req, res) => {
           error: err,
         });
       } else {
-        res.json(result);
+        res.status(200).json(result);
       }
     })
   };
 
 
-  exports.adduserstoGroup = async (req, res) => {
-    var array1 = req.body.groupusers;
-    var array2 = [] 
-    array1.forEach(function(stringId){
-    array2.push((stringId))
-    console.log(((stringId)))
-    })
-    console.log(array2)
-    let user = await User.find({
-        _id: {
-            $in: array2
-        }
-      }).select("_id").then((data) => data);
-     console.log("user", user);
+  // exports.adduserstoGroup = async (req, res) => {
+  //   var array1 = req.body.groupusers;
+  //   var array2 = [] 
+  //   array1.forEach(function(stringId){
+  //   array2.push((stringId))
+  //   //console.log((new ObjectID(stringId)))
+  //   })
+  //   console.log(array2)
+  //   let user = await User.find({
+  //       _id: {
+  //           $in: array2
+  //       }
+  //     }).select("_id").then((data) => data);
+  //    console.log("user", user);
 
-     let group = await Group.find({ groupname: req.body.groupname }).select("_id").then((data) => data);
-     //console.log(group)
-    let groupuser = await Group.findByIdAndUpdate(
-      group,
-      { $addToSet: { groupusers: user } },
-      { new: true },
-    ).exec((err, result) => {
-      if (err) {
-        return res.status(400).json({
-          error: err,
-        });
-      } else {
-        res.json(result);
-      }
-    })
-  };
+  //    let group = await Group.find({ groupname: req.body.groupname }).select("_id").then((data) => data);
+  //    //console.log(group)
+  //   let groupuser = await Group.findByIdAndUpdate(
+  //     group,
+  //     { $addToSet: { groupusers: user } },
+  //     { new: true },
+  //   ).exec((err, result) => {
+  //     if (err) {
+  //       return res.status(400).json({
+  //         error: err,
+  //       });
+  //     } else {
+  //       res.status(200).json(result);
+  //     }
+  //   })
+  // };
 
 
 
