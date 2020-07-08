@@ -4,23 +4,20 @@ const {
   groupsByAdmin,
   getGroups,
   updateGroup,
-  groupsdeleteByUser,
-  adduserstoGroup,
+  removegroupsByUser,
   removeusersfromGroup,
-  getUsersbyids,
 } = require("../controllers/group");
 const { userById } = require("../controllers/user");
 
 const router = express.Router();
 router.route("/createnewgroup/:groupcreatedby").post(createGroup);
 router.route("/getgroupsbyadmin/:groupcreatedby").get(groupsByAdmin);
-router.route("/getusers").get(getUsersbyids);
 router.route("/getallgroups").get(getGroups);
 router.param("groupcreatedby", userById);
 router.route("/updateGroupbyadmin").put(updateGroup);
-router.route("/addUsersToGroupbyAdmin").put(adduserstoGroup);
+//router.route("/addUsersToGroupbyAdmin").put(adduserstoGroup);
 router.route("/removeUsersFromGroupbyAdmin").put(removeusersfromGroup);
-router.route("/groupsdeleteByadmin/:groupcreatedby").delete(groupsdeleteByUser);
+router.route("/groupsdeleteByadmin/:groupcreatedby").delete(removegroupsByUser);
 
 module.exports = router;
 
