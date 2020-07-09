@@ -3,12 +3,17 @@ const User = require("../models/UserSchema");
 const Cryptr = require('cryptr');
 const cryptr = new Cryptr('3');
 
-// const transporter=nodemailer.createTransport(sendgridTransport({
-//   auth:{
-//     api_key: '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'
-//   }
+var nodemailer = require('nodemailer');
 
-// }))
+var transporter = nodemailer.createTransport({
+  service: 'gmail',
+  auth: {
+    user: 'knani.smart9@gmail.com',
+    pass: 'nani@9618073566'
+  }
+});
+
+
 
 exports.getUsers = (req, res) => {
   User.find()
@@ -101,17 +106,26 @@ exports.createUser = async (req, res, next) => {
  
     .then((User) => {
       let password=User.password;
+      let email=User.email;
       let decryptedString = cryptr.decrypt(password);
       console.log(decryptedString)
       res.status(201).json({
-        message: `user created sucessfully and password is ${decryptedString}`,
+        message: `user created sucessfully and please check your email for password`,
       })
-    //  return transporter.sendMail({
-    //     to:'User.email',
-    //     from:'kandukurinani@test.com',
-    //     subject:'Sign up Succeess',
-    //     html:'<h1>you sucessfully signed up</h1>'
-    //   })
+    var mailOptions = {
+      from: 'knani.smart9@gmail.com',
+      to: email,
+      subject: 'Sending Email using Node.js',
+      text: 'Sucessfully registered your password is '+decryptedString
+    };
+    
+    transporter.sendMail(mailOptions, function(error, info){
+      if (error) {
+        console.log(error);
+      } else {
+        console.log('Email sent: ' + info.response);
+      }
+    });
      
     })
     .catch((err) => {
@@ -196,9 +210,25 @@ exports.forgot = (req, res) => {
   User.findOne({ email: email })
   .then((user) => {
     let password=user.password;
+    let email=user.email;
+    console.log(email)
     const decryptedString = cryptr.decrypt(password);
     res.status(200).send({
       msg: `your password is ${decryptedString}`,
+    });
+    var mailOptions = {
+      from: 'knani.smart9@gmail.com',
+      to: email,
+      subject: 'Sending Email using Node.js',
+      text: 'you are sucessfully registered your password is '+decryptedString
+    };
+    
+    transporter.sendMail(mailOptions, function(error, info){
+      if (error) {
+        console.log(error);
+      } else {
+        console.log('Email sent: ' + info.response);
+      }
     });
   }).catch((err)=>{
     res.status(404).json({
